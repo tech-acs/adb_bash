@@ -92,7 +92,6 @@ while true; do
         continue
     fi
 
-    echo ""
     read -p "Scan barcode: " code
     extract_district_code $code
     assign_geocode $district_code
