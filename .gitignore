@@ -1,0 +1,6 @@
+#Ignore
+apks/*
+assigned_code
+
+#Allow
+!apks/adb-join-wifi.apk

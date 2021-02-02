@@ -1,0 +1,7 @@
+{
+"wifi": {
+	"ssid": "Provisioning",
+	"password": "password"
+	},
+"lookup_url": "https://192.168.1.2/api/lookup"
+}
