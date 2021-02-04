@@ -25,7 +25,7 @@ copy_file () {
 }
 
 change_device_name () {
-    echo "Assigning device name..."
+    echo "Assigning device name ($1)..."
     adb shell settings put global device_name $1
     echo "Done!"
 }
