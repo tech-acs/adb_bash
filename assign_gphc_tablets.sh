@@ -10,6 +10,18 @@ install_apks () {
     done
 }
 
+uninstall_app () {
+    echo "Uninstalling app ($1)..."
+    adb shell pm uninstall -k $1
+    echo "Done!"
+}
+
+delete_folder () {
+    echo "Deleting folder ($1)..."
+    adb shell rm -r $1
+    echo "Done!"
+}
+
 assign_geocode () {
     echo $1 > assigned_code
     echo "Assigning geocode $1 to tablet..."
@@ -93,6 +105,8 @@ while true; do
     fi
 
     read -p "Scan barcode: " code
+    uninstall_app "gov.census.cspro.csentry"
+    delete_folder "sdcard/csentry"
     extract_district_code $code
     assign_geocode $district_code
     install_apks

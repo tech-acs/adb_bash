@@ -1,7 +1,7 @@
 {
 "wifi": {
-	"ssid": "Provisioning",
-	"password": "password"
+	"ssid": "PROV",
+	"password": "ilovegss"
 	},
-"lookup_url": "https://192.168.1.2/api/lookup"
+"lookup_url": "https://192.168.0.133/api/lookup"
 }
