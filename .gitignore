@@ -1,6 +1,7 @@
 #Ignore
 apks/*
 assigned_code
+play.sh
 
 #Allow
 !apks/adb-join-wifi.apk
