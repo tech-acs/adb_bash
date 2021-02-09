@@ -114,4 +114,6 @@ while true; do
     copy_file "./init.json" "/sdcard/Download/"
     connect_wifi
     echo -e "\n============================ SUCCESSFULLY COMPLETED ===========================\n"
+
+    read -p "Remove the just completed device and plug in a new one. Press enter when ready "
 done
