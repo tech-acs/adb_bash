@@ -1,6 +1,7 @@
 #Ignore
 apks/*
 assigned_code
+serial
 play.sh
 
 #Allow

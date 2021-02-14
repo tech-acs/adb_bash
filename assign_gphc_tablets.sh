@@ -1,6 +1,102 @@
 #!/bin/bash
 
 ALLOWED_TIME_DRIFT_IN_SECONDS=600
+DELAY=2
+
+start_intent() {
+    adb shell am start -a $1
+    sleep $DELAY
+}
+
+tap() {
+    adb shell input tap $1 $2
+    sleep $DELAY
+}
+
+type_text() {
+    adb shell input keyboard text $1
+    # Press enter (ok button)
+    #adb shell input keyevent KEYCODE_ENTER
+    sleep $DELAY
+}
+
+go_home() {
+    adb shell input keyevent KEYCODE_HOME
+}
+
+clear_textbox() {
+    adb shell input keyevent KEYCODE_MOVE_END
+    adb shell input keyevent --longpress $(printf 'KEYCODE_DEL %.0s' {1..50})
+}
+
+press_power_button() {
+    adb shell input keyevent KEYCODE_POWER
+    sleep $DELAY
+}
+
+swipe_up() {
+    adb shell input touchscreen swipe 300 400 300 0
+}
+
+screen_is_on() {
+    screen_is_on="$(adb shell dumpsys input_method | grep -c "mInteractive=true")"
+}
+
+turn_screen_on() {
+    press_power_button
+    swipe_up
+}
+
+disable_screen_rotation() {
+    adb shell content insert --uri content://settings/system --bind name:s:accelerometer_rotation --bind value:i:0
+}
+
+set_huawei_device_bluetooth_name() {
+    # Subshell runs similar to try/catch
+    (
+        # The -e flag will make the subshell exit immedietely on the first error
+        set -e
+
+        echo -e "Setting device bluetooth name..."
+        
+        #check_screen_status
+        
+        if ! screen_is_on ; then
+            turn_screen_on
+        fi
+
+        disable_screen_rotation
+
+        go_home
+        start_intent "android.bluetooth.adapter.action.REQUEST_ENABLE"
+        # Press the 'ALLOW' button
+        tap 530 690
+
+        # Open bluetooth settings screen
+        start_intent "android.settings.BLUETOOTH_SETTINGS"
+        
+        # Tap on the 'Device name' line
+        tap 600 300
+        
+        clear_textbox
+
+        type_text $1
+
+        # Tap on the 'SAVE' button
+        tap 600 600
+        
+        go_home
+    )
+
+    if [ $? -ne 0 ]; then
+        echo -e "FAILED!"
+    else
+        echo -e "Done!"
+    fi
+    exit $?
+}
+
+# =================== All the above functions are here just to change huawei device BT name =========================
 
 install_apks () {
     for file in 'apks'/*; do
@@ -12,13 +108,13 @@ install_apks () {
 
 uninstall_app () {
     echo "Uninstalling app ($1)..."
-    adb shell pm uninstall -k $1
+    adb shell pm uninstall -k $1 2> /dev/null
     echo "Done!"
 }
 
 delete_folder () {
     echo "Deleting folder ($1)..."
-    adb shell rm -r $1
+    adb shell rm -r $1 2> /dev/null
     echo "Done!"
 }
 
@@ -28,6 +124,18 @@ assign_geocode () {
     adb shell mkdir /sdcard/census_device_identity
     adb push ./assigned_code /sdcard/census_device_identity/
     echo "Done!"
+}
+
+stash_serial_on_tablet () {
+    serial_no=$(adb get-serialno)
+    echo $serial_no > serial
+    echo "Pushing serial to tablet..."
+    adb push ./serial /sdcard/census_device_identity/
+    echo "Done!"
+}
+
+get_device_manufacturer () {
+    manufacturer=$(adb shell getprop ro.product.manufacturer)
 }
 
 copy_file () {
@@ -100,6 +208,7 @@ while true; do
     check_correct_device_time
     if [ "$device_time_correct" == 0 ]; then
         echo -e "\nDevice has wrong date/time set."
+        adb shell am start -n com.android.settings/.DateTimeSettingsSetupWizard
         read -p "Please correct and press enter to try again "
         continue
     fi
@@ -107,13 +216,20 @@ while true; do
     read -p "Scan barcode: " code
     uninstall_app "gov.census.cspro.csentry"
     delete_folder "sdcard/csentry"
+    delete_folder "sdcard/Android/data/gov.census.cspro.csentry/files/csentry/Ghana-PHC-2021"
     extract_district_code $code
     assign_geocode $district_code
+    stash_serial_on_tablet
     install_apks
-    change_device_name $code
+    get_device_manufacturer
+    if [ "$manufacturer" == "HUAWEI" ]; then
+        set_huawei_device_bluetooth_name $code
+    else
+        change_device_name $code
+    fi
     copy_file "./init.json" "/sdcard/Download/"
     connect_wifi
     echo -e "\n============================ SUCCESSFULLY COMPLETED ===========================\n"
 
-    read -p "Remove the just completed device and plug in a new one. Press enter when ready "
+    read -p "Plug-in the next tablet and press enter when ready "
 done
