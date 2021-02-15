@@ -93,7 +93,7 @@ set_huawei_device_bluetooth_name() {
     else
         echo -e "Done!"
     fi
-    exit $?
+    #exit $?
 }
 
 # =================== All the above functions are here just to change huawei device BT name =========================
