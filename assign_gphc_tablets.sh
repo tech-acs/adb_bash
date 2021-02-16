@@ -229,6 +229,7 @@ while true; do
     fi
     copy_file "./init.json" "/sdcard/Download/"
     connect_wifi
+    disable_developer_options
     echo -e "\n============================ SUCCESSFULLY COMPLETED ===========================\n"
 
     read -p "Plug-in the next tablet and press enter when ready "
