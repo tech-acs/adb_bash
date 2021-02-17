@@ -208,7 +208,7 @@ while true; do
     check_correct_device_time
     if [ "$device_time_correct" == 0 ]; then
         echo -e "\nDevice has wrong date/time set."
-        adb shell am start -n com.android.settings/.DateTimeSettingsSetupWizard
+        adb shell am start -a android.settings.DATE_SETTINGS
         read -p "Please correct and press enter to try again "
         continue
     fi
