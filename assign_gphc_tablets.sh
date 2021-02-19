@@ -169,6 +169,8 @@ extract_district_code () {
 
 disable_developer_options() {
     adb shell settings put global development_settings_enabled 0
+    adb shell settings put global adb_enabled 0
+    adb shell pm clear com.android.settings
 }
 
 check_device_is_connected() {
