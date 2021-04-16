@@ -106,6 +106,11 @@ install_apks () {
     done
 }
 
+grant_permissions() {
+    adb shell pm grant com.provisioner android.permission.WRITE_EXTERNAL_STORAGE
+    adb shell pm grant com.provisioner android.permission.ACCESS_FINE_LOCATION
+}
+
 uninstall_app () {
     echo "Uninstalling app ($1)..."
     adb shell pm uninstall -k $1 2> /dev/null
@@ -223,6 +228,7 @@ while true; do
     assign_geocode $district_code
     stash_serial_on_tablet
     install_apks
+    grant_permissions
     get_device_manufacturer
     if [ "$manufacturer" == "HUAWEI" ]; then
         set_huawei_device_bluetooth_name $code
