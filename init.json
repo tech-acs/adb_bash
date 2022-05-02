@@ -1,7 +1,7 @@
 {
 "wifi": {
-	"ssid": "PROV",
-	"password": "ilovegss"
+	"ssid": "censusconfig",
+	"password": "config123"
 	},
-"lookup_url": "https://192.168.0.133/api/lookup"
+"lookup_url": "http://192.168.37.48/csweb/api"
 }

@@ -111,8 +111,8 @@ install_apks () {
 }
 
 grant_permissions() {
-    adb shell pm grant com.provisioner android.permission.WRITE_EXTERNAL_STORAGE
-    adb shell pm grant com.provisioner android.permission.ACCESS_FINE_LOCATION
+    adb shell pm grant gov.census.cspro.csentry android.permission.WRITE_EXTERNAL_STORAGE
+    adb shell pm grant gov.census.cspro.csentry android.permission.ACCESS_FINE_LOCATION
 }
 
 uninstall_app () {
@@ -121,9 +121,29 @@ uninstall_app () {
     echo "Done!"
 }
 
+disable_app () {
+    echo "Disabling app ($1)..."
+    adb shell pm disable-user --user 0 $1 2> /dev/null
+    echo "Done!"
+}
+
+disable_bluetooth () {    
+    adb shell am start -a android.bluetooth.adapter.action.REQUEST_DISABLE
+    sleep 2
+    adb shell input keyevent 22
+    adb shell input keyevent 22
+    adb shell input keyevent 66
+}
+
 delete_folder () {
     echo "Deleting folder ($1)..."
     adb shell rm -r $1 2> /dev/null
+    echo "Done!"
+}
+
+delete_file () {
+    echo "Deleting file ($1)..."
+    adb shell rm $1 2> /dev/null
     echo "Done!"
 }
 
@@ -208,6 +228,56 @@ check_correct_device_time() {
     fi
 }
 
+turn_off_sound() {
+    # Call, ring, media and alarm
+    adb shell media volume --stream 0 --set 1
+    adb shell media volume --stream 2 --set 0
+    adb shell media volume --stream 3 --set 0
+    adb shell media volume --stream 4 --set 1
+}
+
+adjust_screen_brightness () {
+    # Turn on 'Adaptive brighness' and then set brighness to 75%
+    echo "Enabling adaptive brightness..."
+    adb shell settings put system screen_brightness_mode 1
+    sleep 2
+    echo "Setting brighness to 75%..."
+    adb shell settings put system screen_brightness 75
+}
+
+check_app_is_installed () {
+    app_found=`adb shell pm list packages | grep "$1" | wc -w`
+    if [ "$app_found" != 1 ]; then
+        echo "$2 IS NOT installed"
+    else
+        echo "$2 IS installed"
+    fi
+}
+
+clear_app_cache () {
+    echo "Clearing app cache..."
+    adb shell pm clear $1
+}
+
+turn_wifi_off () {
+    echo "Turning wifi off..."
+    adb shell svc wifi disable
+    echo "Done!"
+}
+
+log () {
+    
+    if [ ! -f "$1" ]; then
+        echo "Creating log file..."
+        echo "Serial No., Tablet Name, Time of Provisioning, Battery Level" >> $1
+    fi
+    serial_no=`adb get-serialno`
+    battery_level=`adb shell dumpsys battery | grep level | sed -n -e 's/^.*level: //p'`
+    echo "Writing log entry..."
+    echo "$serial_no, $code, `date`, $battery_level" >> $1
+    echo "Done!"
+}
+
 while true; do
     check_device_is_connected
     if [ "$no_of_devices" != 1 ]; then
@@ -225,23 +295,52 @@ while true; do
     fi
 
     read -p "Scan barcode: " code
-    uninstall_app "gov.census.cspro.csentry"
-    delete_folder "sdcard/csentry"
-    delete_folder "sdcard/Android/data/gov.census.cspro.csentry/files/csentry/2021MTPHC"
-    extract_district_code $code
-    assign_geocode $district_code
-    stash_serial_on_tablet
+
+    echo -e "\n1. Install apps\n---------------------"
     install_apks
-    grant_permissions
+    #grant_permissions
+
+    echo -e "\n2. Rename bluetooth\n-----------------------"
     get_device_manufacturer
     if [ "$manufacturer" == "Positivo BGH" ]; then
         set_kenya_device_bluetooth_name $code
     else
         change_device_name $code
     fi
+
+    echo -e "\n3. Turn off bluetooth\n--------------------------"
+    disable_bluetooth
+
+    echo -e "\n2. Connect to WiFi\n------------------------"
     copy_file "./init.json" "/sdcard/Download/"
     connect_wifi
+
+    echo -e "\n4. Disable apps (Play Store and Youtube)\n--------------------------------------------"
+    disable_app "com.android.vending"
+    disable_app "com.google.android.youtube"
+
+    echo -e "\n5. Turn off all sound\n------------------------------"
+    turn_off_sound
+
+    echo -e "\n6. Screen brightness\n-------------------------"
+    adjust_screen_brightness
+
+    echo -e "\n7. Check apps presence\n-----------------------------"
+    check_app_is_installed "com.android.chrome" "Chrome"
+
+    echo -e "\n8. CSEntry: Delete sync log and clear app cache\n--------------------------------------------------------"
+    delete_file "sdcard/csentry/sync.log"
+    clear_app_cache "gov.census.cspro.csentry"
+
+    echo -e "\n9. Turn WiFi off\n-------------------------"
+    turn_wifi_off
+
+    echo -e "\n10. Log results to file (log.csv)\n---------------------------------------"
+    log "log.csv"
+
+    echo -e "\n11. Disable developer options\n----------------------------------"
     disable_developer_options
+
     echo -e "\n============================ SUCCESSFULLY COMPLETED ===========================\n"
 
     read -p "Plug-in the next tablet and press enter when ready "
