@@ -111,8 +111,11 @@ install_apks () {
 }
 
 grant_permissions() {
-    adb shell pm grant gov.census.cspro.csentry android.permission.WRITE_EXTERNAL_STORAGE
+    adb shell pm grant gov.census.cspro.csentry android.permission.CAMERA
+    adb shell pm grant gov.census.cspro.csentry android.permission.READ_CONTACTS
     adb shell pm grant gov.census.cspro.csentry android.permission.ACCESS_FINE_LOCATION
+    adb shell pm grant gov.census.cspro.csentry android.permission.RECORD_AUDIO
+    adb shell pm grant gov.census.cspro.csentry android.permission.WRITE_EXTERNAL_STORAGE
 }
 
 uninstall_app () {
@@ -298,7 +301,7 @@ while true; do
 
     echo -e "\n1. Install apps\n---------------------"
     install_apks
-    #grant_permissions
+    grant_permissions
 
     echo -e "\n2. Rename bluetooth\n-----------------------"
     get_device_manufacturer
