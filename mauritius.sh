@@ -268,8 +268,15 @@ turn_wifi_off () {
     echo "Done!"
 }
 
+copy_payload () {
+    echo "Copying csentry folder..."
+    adb push payload/csentry /sdcard/Android/data/gov.census.cspro.csentry/files
+    echo "Copying CensusMaterials folder..."
+    adb push payload/CensusMaterials /sdcard
+    echo "Done!"
+}
+
 log () {
-    
     if [ ! -f "$1" ]; then
         echo "Creating log file..."
         echo "Serial No., Tablet Name, Time of Provisioning, Battery Level" >> $1
@@ -328,23 +335,26 @@ while true; do
     echo -e "\n6. Screen brightness\n-------------------------"
     adjust_screen_brightness
 
-    echo -e "\n7. Check apps presence\n-----------------------------"
+    echo -e "\n7. Copy payload\n--------------------"
+    copy_payload
+
+    echo -e "\n8. Check apps presence\n-----------------------------"
     check_app_is_installed "com.android.chrome" "Chrome"
 
-    echo -e "\n8. CSEntry: Delete sync log and clear app cache\n--------------------------------------------------------"
+    echo -e "\n9. CSEntry: Delete sync log and clear app cache\n--------------------------------------------------------"
     delete_file "sdcard/csentry/sync.log"
     clear_app_cache "gov.census.cspro.csentry"
 
-    echo -e "\n9. Turn WiFi off\n-------------------------"
+    echo -e "\n10. Turn WiFi off\n-------------------------"
     turn_wifi_off
 
-    echo -e "\n10. Log results to file (log.csv)\n---------------------------------------"
+    echo -e "\n11. Log results to file (log.csv)\n---------------------------------------"
     log "log.csv"
 
-    echo -e "\n11. Disable developer options\n----------------------------------"
+    echo -e "\n12. Disable developer options\n----------------------------------"
     disable_developer_options
 
-    echo -e "\n============================ SUCCESSFULLY COMPLETED ===========================\n"
+    echo -e "\n============================ COMPLETED ===========================\n"
 
     read -p "Plug-in the next tablet and press enter when ready "
 done
